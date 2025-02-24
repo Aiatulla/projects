@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Math Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        h2 {
+            color: #333;
+        }
+        #scores, #question, #check {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 10px 0;
+            width: 300px;
+            text-align: center;
+        }
+        input[type="number"] {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 280px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #next {
+            background-color: #007bff;
+        }
+        #next:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Math Test</h2>
+<h3 id = "usernick">User</h3>
+
+<p id="scores">scores</p>
+<p id="question">question</p>
+<input id="answer" type="number" placeholder="Enter your answer">
+<p id="check">check</p>
+<button id="ok" onclick="checkResult()">OK</button>
+<button id="next" onclick="generate()">Next</button>
+
+<script>
+let currentQuestion = "";// Store the current question
+
+function set_user_name(){
+        fetch("http://127.0.0.1:8080/get_user")
+        .then(usser=>usser.json())
+        .then(data => document.getElementById("usernick").innerHTML = data.username)
+        .catch(error => console.log("error"))
+        }
+
+
+
+
+function generate() {
+    console.log("Generate function called");
+    fetch("http://127.0.0.1:8080/get_question")
+        .then(response => {
+            console.log("Response received:", response);
+            return response.json();
+        })
+        .then(data => {
+            console.log("Data received:", data);
+            currentQuestion = data.question; // Store the question
+            document.getElementById("question").innerHTML = currentQuestion;
+        })
+        .catch(error => {
+            console.error("Error fetching question:", error);
+        });
+}
+
+function checkResult() {
+    let answer = document.getElementById("answer").value;
+    console.log("Checking result for answer:", answer);
+
+    fetch("http://127.0.0.1:8080/check_result", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            question: currentQuestion,
+            answer: answer
+        }),
+    })
+        .then(response => {
+            console.log("Response received:", response);
+            return response.json();
+        })
+        .then(data => {
+            console.log("Data received:", data);
+            document.getElementById("scores").innerHTML = `
+                correct: ${data.results.correct}<br>
+                incorrect: ${data.results.incorrect}<br>
+                attempt: ${data.results.attempt}<br>
+                question_count: ${data.results.question_count}
+            `;
+            document.getElementById("check").innerHTML = data.correct ? "Correct!" : "Incorrect!";
+        })
+        .catch(error => {
+            console.error("Error checking result:", error);
+        });
+}
+
+generate(); // Generate the first question when the page loads
+</script>
+
+</body>
+</html>
